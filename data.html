@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Data</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <h1 class="page-title">Data</h1>
+
+        <section class="card form-card">
+          <span class="sim-tag">Simulated purchase: no data is delivered</span>
+          <p id="msg" class="form-message"></p>
+
+          <form id="dataForm" novalidate>
+            <div class="profile-field">
+              <label for="network">Network</label>
+              <select id="network">
+                <option value="">Select a network</option>
+                <option>MTN</option>
+                <option>Airtel</option>
+                <option>Glo</option>
+                <option>9mobile</option>
+              </select>
+            </div>
+            <div class="profile-field">
+              <label for="phone">Phone number</label>
+              <input type="tel" id="phone" inputmode="numeric" maxlength="11" placeholder="08012345678" autocomplete="off" />
+            </div>
+            <div class="profile-field">
+              <label for="plan">Data plan</label>
+              <select id="plan"><option value="">Select a plan</option></select>
+              <small id="balanceHint"></small>
+            </div>
+            <button type="submit" class="btn-primary" id="submitBtn">Buy data</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script type="module" src="js/data.js"></script>
+</body>
+</html>

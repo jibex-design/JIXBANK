@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Dashboard</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+
+        <section class="row-top">
+          <div class="balance-card">
+            <p class="balance-label">
+              Available Balance
+              <button type="button" class="eye-btn" id="toggleBalance" aria-label="Hide or show balance">
+                <i data-lucide="eye" id="eyeIcon"></i>
+              </button>
+            </p>
+            <h1 class="balance-amount loading" id="balanceAmount">₦000,000.00</h1>
+            <button type="button" class="btn-primary" id="addMoneyBtn">
+              <i data-lucide="plus-circle"></i> Add Money
+            </button>
+            <p class="acct-line">Account No: <strong id="accountNumber">Loading…</strong></p>
+          </div>
+
+          <div class="refer-card">
+            <span class="refer-tag">Refer and Earn</span>
+            <div class="refer-body">
+              <div class="refer-coin">💰</div>
+              <div>
+                <h3>Win up to ₦10,000 Cash</h3>
+                <p>Invite friends and earn.</p>
+              </div>
+              <button type="button" class="btn-yellow" id="referBtn">Go Now</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="quick-actions">
+          <a href="transfer.html?to=bank" class="quick-btn">
+            <span class="quick-icon"><i data-lucide="landmark"></i></span> To Bank
+          </a>
+          <a href="transfer.html?to=user" class="quick-btn">
+            <span class="quick-icon"><i data-lucide="user"></i></span> To JIXBANK
+          </a>
+          <a href="savings.html" class="quick-btn">
+            <span class="quick-icon"><i data-lucide="list"></i></span> Savings
+          </a>
+          <a href="atm-card.html" class="quick-btn">
+            <span class="quick-icon"><i data-lucide="credit-card"></i></span> ATM Card
+          </a>
+        </section>
+
+        <section class="row-bottom">
+
+          <div class="card transactions-card">
+            <div class="card-head">
+              <h3>Recent Transactions</h3>
+              <a href="transactions.html" class="btn-outline">View more</a>
+            </div>
+            <ul class="tx-list" id="txList">
+              <li class="tx-empty">No transactions yet. Your activity will show here.</li>
+            </ul>
+          </div>
+
+          <div class="promo-column">
+            <div class="promo-banner">
+              <small>JIXBANK Bonanza</small>
+              <h3>Recharge &amp; Win!</h3>
+              <p>Raffle draw coming soon</p>
+              <a href="airtime.html" class="btn-yellow">Recharge Now</a>
+            </div>
+
+            <div class="card reward-card">
+              <p class="reward-label">Exclusive reward</p>
+              <div class="reward-row">
+                <span class="reward-icon"><i data-lucide="shield-check"></i></span>
+                <div>
+                  <h4>Health Insurance <span class="free-tag">Free</span></h4>
+                  <small>₦500,000 coverage (demo placeholder)</small>
+                </div>
+                <button type="button" class="btn-primary btn-small" id="claimBtn">Claim</button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add Money modal (simulated deposit) -->
+  <div class="modal hidden" id="addMoneyModal">
+    <div class="modal-box">
+      <h3>Add Money <small>(simulated)</small></h3>
+      <p>This is a demo deposit. No real money is received.</p>
+      <p id="depositError" class="form-message"></p>
+      <input type="number" id="depositAmount" placeholder="Amount in ₦" min="100" />
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="closeModal">Cancel</button>
+        <button type="button" class="btn-primary" id="confirmDeposit">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script type="module" src="js/dashboard-tx.js"></script>
+  <script type="module" src="js/deposit.js"></script>
+</body>
+</html>

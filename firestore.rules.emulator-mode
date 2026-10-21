@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- profile ----------
+    // Users can READ their own profile and change ONLY their name and picture.
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, delete: if false;     // the server creates profiles
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName', 'photoURL'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60
+        && request.resource.data.photoURL is string
+        && request.resource.data.photoURL.size() <= 150000
+        && (request.resource.data.photoURL == ''
+            || request.resource.data.photoURL.matches('data:image/jpeg;base64,.*'));
+    }
+
+    // ---------- money: READ ONLY for the owner ----------
+    match /accounts/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false;               // only the server (Admin SDK) changes balances
+    }
+
+    // ---------- history: read only your own, never write ----------
+    match /transactions/{transactionId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---------- savings goals: read only your own, never write ----------
+    match /savings/{savingId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---------- notifications: read your own, and ONLY mark them read ----------
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+      allow create, delete: if false;
+    }
+
+    // ---------- account-number lock records: server only ----------
+    match /accountNumbers/{number} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Profile</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <h1 class="page-title">Profile</h1>
+
+        <section class="card profile-card">
+
+          <div class="profile-photo">
+            <img id="profileAvatar" class="profile-avatar" alt="Your profile picture" />
+            <button type="button" class="btn-outline" id="changePhotoBtn">Change photo</button>
+            <input type="file" id="photoInput" accept="image/png,image/jpeg,image/webp" hidden />
+            <small>JPG, PNG or WEBP. Max 5 MB.</small>
+          </div>
+
+          <form id="profileForm" class="profile-form" novalidate>
+            <p id="profileMessage" class="form-message"></p>
+
+            <div class="profile-field">
+              <label for="fullName">Full name</label>
+              <input type="text" id="fullName" maxlength="60" autocomplete="name" />
+            </div>
+
+            <div class="profile-field">
+              <label for="email">Email</label>
+              <input type="email" id="email" readonly />
+              <small>Your email can't be changed here.</small>
+            </div>
+
+            <div class="profile-field">
+              <label for="accountNumber">Account number</label>
+              <input type="text" id="accountNumber" readonly />
+            </div>
+
+            <button type="submit" class="btn-primary" id="saveBtn">Save changes</button>
+          </form>
+
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script type="module" src="js/profile.js"></script>
+</body>
+</html>

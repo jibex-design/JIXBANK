@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Log in</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="auth-body">
+
+  <main class="auth-wrapper">
+
+    <section class="auth-left">
+      <img src="assets/images/logo.png" alt="JIXBANK logo" class="auth-logo" />
+      <h1 class="auth-title">Log in</h1>
+      <p class="auth-subtitle">Welcome back to JIXBANK</p>
+
+      <div class="social-buttons">
+        <button type="button" class="social-btn" id="googleBtn"><i data-lucide="chrome"></i> Log in with Google</button>
+        <button type="button" class="social-btn" id="appleBtn"><i data-lucide="apple"></i> Log in with Apple</button>
+      </div>
+
+      <p id="formMessage" class="form-message"></p>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <div class="input-box">
+            <input type="email" id="email" placeholder="PolisonJ@gmail.com" autocomplete="email" required />
+            <span class="tick"><i data-lucide="check"></i></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="input-box">
+            <input type="password" id="password" placeholder="••••••••••" autocomplete="current-password" required />
+            <span class="tick"><i data-lucide="check"></i></span>
+          </div>
+        </div>
+
+        <div class="forgot-row">
+          <button type="button" class="forgot-link" id="forgotLink">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="submit-circle" id="submitBtn" aria-label="Log in">
+          <i data-lucide="arrow-right"></i>
+        </button>
+      </form>
+
+      <p class="switch-link">New here? <a href="register.html">Create an account</a></p>
+    </section>
+
+    <section class="auth-right">
+      <div class="carousel" id="carousel">
+        <div class="slide active" style="background-image:url('assets/images/slide1.jpg')"></div>
+        <div class="slide" style="background-image:url('assets/images/slide2.jpg')"></div>
+        <div class="slide" style="background-image:url('assets/images/slide3.jpg')"></div>
+        <div class="slide" style="background-image:url('assets/images/slide4.jpg')"></div>
+        <div class="slide" style="background-image:url('assets/images/slide5.jpg')"></div>
+
+        <div class="slide-caption">
+          <span class="caption-star"><i data-lucide="sparkles"></i></span>
+          <h3 id="captionTitle">Banking Made Simple</h3>
+          <p id="captionText">Send, save and spend with confidence. Everything you need is in one place.</p>
+        </div>
+
+        <div class="dots" id="dots">
+          <button class="dot active" aria-label="Slide 1"></button>
+          <button class="dot" aria-label="Slide 2"></button>
+          <button class="dot" aria-label="Slide 3"></button>
+          <button class="dot" aria-label="Slide 4"></button>
+          <button class="dot" aria-label="Slide 5"></button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Forgot password pop-up -->
+  <div class="modal hidden" id="forgotModal">
+    <div class="modal-box">
+      <h3>Reset your password</h3>
+      <p>Enter your email and we'll send you a reset link.</p>
+      <p id="resetMessage" class="form-message"></p>
+      <input type="email" id="resetEmail" placeholder="you@example.com" autocomplete="email" />
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="closeReset">Cancel</button>
+        <button type="button" class="btn-primary" id="sendReset">Send link</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/carousel.js"></script>
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script>lucide.createIcons();</script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

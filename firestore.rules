@@ -1,0 +1,95 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // SIMPLE-MODE RULES (the app moves money from the browser).
+    // For the secure Cloud Functions version use firestore.secure.rules instead.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // ---------- profile ----------
+    // Signed-in users can read profiles (needed to show a recipient's name on transfers).
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['fullName', 'email', 'photoURL', 'createdAt']);
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName', 'photoURL'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60
+        && request.resource.data.photoURL is string
+        && request.resource.data.photoURL.size() <= 150000
+        && (request.resource.data.photoURL == ''
+            || request.resource.data.photoURL.matches('data:image/jpeg;base64,.*'));
+      allow delete: if false;
+    }
+
+    // ---------- accounts ----------
+    // Anyone signed in can change ONLY the balance field (a transfer must credit the
+    // other person). That is the weak spot of simple mode: see the README.
+    match /accounts/{userId} {
+      allow read: if signedIn();
+      allow create: if isOwner(userId)
+        && request.resource.data.balance == 0
+        && request.resource.data.accountStatus == 'active';
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance'])
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.balance <= 50000000;
+      allow delete: if false;
+    }
+
+    // ---------- account-number records (used to find who owns a number) ----------
+    match /accountNumbers/{number} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid']);
+      allow update, delete: if false;
+    }
+
+    // ---------- history: you can only READ your own ----------
+    match /transactions/{transactionId} {
+      allow read: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0;
+      allow update, delete: if false;
+    }
+
+    // ---------- savings goals ----------
+    match /savings/{savingId} {
+      allow read: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.savedAmount == 0;
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['savedAmount'])
+        && request.resource.data.savedAmount is number
+        && request.resource.data.savedAmount >= 0;
+      allow delete: if false;
+    }
+
+    // ---------- notifications ----------
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.read == false;
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+      allow delete: if false;
+    }
+  }
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Transfer</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <h1 class="page-title">Transfer</h1>
+
+        <div class="notice hidden" id="bankNotice">
+          Transfers to other banks aren't available in this demo. You can send money to another JIXBANK test account.
+        </div>
+
+        <!-- STEP 1: the form -->
+        <section class="card form-card" id="stepForm">
+          <span class="sim-tag">Simulated transfer: no real money moves</span>
+          <p id="formMsg" class="form-message"></p>
+
+          <form id="transferForm" novalidate>
+            <div class="profile-field">
+              <label for="accountNumber">Recipient account number</label>
+              <input type="text" id="accountNumber" inputmode="numeric" maxlength="10" placeholder="10-digit account number" autocomplete="off" />
+            </div>
+            <div class="profile-field">
+              <label for="amount">Amount (₦)</label>
+              <input type="number" id="amount" min="100" step="0.01" placeholder="0.00" />
+              <small id="balanceHint"></small>
+            </div>
+            <div class="profile-field">
+              <label for="description">Description (optional)</label>
+              <input type="text" id="description" maxlength="100" placeholder="e.g. Lunch money" />
+            </div>
+            <button type="submit" class="btn-primary" id="continueBtn">Continue</button>
+          </form>
+        </section>
+
+        <!-- STEP 2: confirmation screen -->
+        <section class="card form-card hidden" id="stepConfirm">
+          <h3>Confirm transfer</h3>
+          <span class="sim-tag">Simulated</span>
+          <p id="confirmMsg" class="form-message"></p>
+          <dl class="detail-list">
+            <div class="detail-row"><dt>Recipient</dt><dd id="cName"></dd></div>
+            <div class="detail-row"><dt>Account number</dt><dd id="cAcct"></dd></div>
+            <div class="detail-row"><dt>Amount</dt><dd id="cAmount"></dd></div>
+            <div class="detail-row"><dt>Description</dt><dd id="cDesc"></dd></div>
+          </dl>
+          <div class="btn-row">
+            <button type="button" class="btn-outline" id="backBtn">Back</button>
+            <button type="button" class="btn-primary" id="confirmBtn">Confirm &amp; send</button>
+          </div>
+        </section>
+
+        <!-- STEP 3: success screen -->
+        <section class="card form-card success-box hidden" id="stepDone">
+          <div class="success-icon">✓</div>
+          <h3>Transfer successful</h3>
+          <p id="doneText"></p>
+          <dl class="detail-list">
+            <div class="detail-row"><dt>Reference</dt><dd id="dRef"></dd></div>
+            <div class="detail-row"><dt>New balance</dt><dd id="dBalance"></dd></div>
+          </dl>
+          <div class="btn-row">
+            <button type="button" class="btn-outline" id="newTransferBtn">New transfer</button>
+            <a href="transactions.html" class="btn-primary">View history</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script type="module" src="js/transfer.js"></script>
+</body>
+</html>

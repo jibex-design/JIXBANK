@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Transactions</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <h1 class="page-title">Transactions</h1>
+
+        <section class="card">
+          <div class="filters">
+            <div>
+              <label for="typeFilter">Type</label>
+              <select id="typeFilter">
+                <option value="">All types</option>
+                <option value="deposit">Deposit</option>
+                <option value="transfer">Transfer</option>
+                <option value="withdrawal">Withdrawal</option>
+                <option value="airtime">Airtime</option>
+                <option value="data">Data</option>
+                <option value="savings">Savings</option>
+              </select>
+            </div>
+            <div>
+              <label for="statusFilter">Status</label>
+              <select id="statusFilter">
+                <option value="">All statuses</option>
+                <option value="successful">Successful</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <span class="tx-count" id="txCount"></span>
+          </div>
+
+          <ul class="tx-list" id="txList">
+            <li class="tx-empty">Loading transactions…</li>
+          </ul>
+
+          <div class="load-more-wrap">
+            <button type="button" class="btn-outline hidden" id="loadMoreBtn">Load more</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script type="module" src="js/transactions.js"></script>
+</body>
+</html>

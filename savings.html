@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIXBANK | Savings</title>
+  <link rel="icon" href="assets/images/logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+
+      <main class="content">
+        <h1 class="page-title">Savings</h1>
+
+        <div class="savings-top">
+          <div class="card"><div class="stat-label">Main balance</div><div class="stat-value" id="mainBalance">-</div></div>
+          <div class="card"><div class="stat-label">Total in savings (separate)</div><div class="stat-value" id="totalSaved">₦0.00</div></div>
+        </div>
+
+        <section class="card form-card">
+          <span class="sim-tag">Simulated savings: no real money</span>
+          <h3 style="margin-bottom:12px;color:var(--navy)">Create a savings goal</h3>
+          <p id="goalMsg" class="form-message"></p>
+          <form id="goalForm" novalidate>
+            <div class="profile-field">
+              <label for="goalName">Goal name</label>
+              <input type="text" id="goalName" maxlength="40" placeholder="e.g. New laptop" autocomplete="off" />
+            </div>
+            <div class="profile-field">
+              <label for="goalTarget">Target amount (₦)</label>
+              <input type="number" id="goalTarget" min="1000" step="0.01" placeholder="50000" />
+            </div>
+            <button type="submit" class="btn-primary" id="goalBtn">Create goal</button>
+          </form>
+        </section>
+
+        <div class="goal-grid" id="goalGrid"></div>
+        <p class="tx-empty" id="goalEmpty">You have no savings goals yet.</p>
+      </main>
+    </div>
+  </div>
+
+  <!-- amount pop-up for adding to / withdrawing from a goal -->
+  <div class="modal hidden" id="amountModal">
+    <div class="modal-box">
+      <h3 id="amountTitle">Add money</h3>
+      <p id="amountHelp"></p>
+      <p id="amountError" class="form-message"></p>
+      <input type="number" id="amountInput" min="100" step="0.01" placeholder="Amount in ₦" />
+      <div class="modal-actions">
+        <button type="button" class="btn-outline" id="amountCancel">Cancel</button>
+        <button type="button" class="btn-primary" id="amountOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <script src="js/ui.js"></script>
+  <script type="module" src="js/guard.js"></script>
+  <script type="module" src="js/savings.js"></script>
+</body>
+</html>

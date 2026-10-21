@@ -1,0 +1,228 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------
+    // ONLINE MODE RULES
+    // The browser does the banking, so these rules are the guard:
+    //  * you can only read YOUR OWN data
+    //  * your balance can only change together with a matching
+    //    transaction record (same amount, right direction)
+    //  * another user's balance can only go UP, and only by a
+    //    transfer that you also paid for, in the same write
+    // ---------------------------------------------------------
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    function accountPath(uid) { return /databases/$(database)/documents/accounts/$(uid); }
+    function txPath(id) { return /databases/$(database)/documents/transactions/$(id); }
+    function savingPath(id) { return /databases/$(database)/documents/savings/$(id); }
+    function lockPath(number) { return /databases/$(database)/documents/accountNumbers/$(number); }
+
+    function txAfter(id) { return getAfter(txPath(id)).data; }
+    function money(a, b) { return math.abs(a - b) < 0.01; }  // tolerance for decimals
+
+    // ---------- profile ----------
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['fullName', 'email', 'photoURL', 'createdAt'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60
+        && request.resource.data.email is string
+        && request.resource.data.photoURL == ''
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(userId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName', 'photoURL'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60
+        && request.resource.data.photoURL is string
+        && request.resource.data.photoURL.size() <= 150000
+        && (request.resource.data.photoURL == ''
+            || request.resource.data.photoURL.matches('data:image/jpeg;base64,.*'));
+      allow delete: if false;
+    }
+
+    // ---------- account-number records (lets people find a recipient's NAME) ----------
+    match /accountNumbers/{number} {
+      allow get: if signedIn();
+      allow list: if false;  // nobody can list all account numbers
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'fullName'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60
+        && getAfter(accountPath(request.auth.uid)).data.accountNumber == number;
+      allow update: if signedIn()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName'])
+        && request.resource.data.fullName is string
+        && request.resource.data.fullName.size() >= 2
+        && request.resource.data.fullName.size() <= 60;
+      allow delete: if false;
+    }
+
+    // ---------- bank account ----------
+    function savingsOk(t) {
+      return getAfter(savingPath(t.savingId)).data.userId == request.auth.uid
+        && (t.direction == 'debit'
+            ? money(getAfter(savingPath(t.savingId)).data.savedAmount,
+                    get(savingPath(t.savingId)).data.savedAmount + t.amount)
+            : money(getAfter(savingPath(t.savingId)).data.savedAmount,
+                    get(savingPath(t.savingId)).data.savedAmount - t.amount));
+    }
+
+    // your own balance moved, with a brand-new matching transaction
+    function selfTxOk(id, uid) {
+      let t = txAfter(id);
+      return t.userId == uid
+        && ((t.direction == 'credit'
+              && t.type in ['deposit', 'savings']
+              && money(request.resource.data.balance, resource.data.balance + t.amount))
+         || (t.direction == 'debit'
+              && t.type in ['transfer', 'withdrawal', 'airtime', 'data', 'savings']
+              && money(request.resource.data.balance, resource.data.balance - t.amount)))
+        && (t.type != 'savings' || savingsOk(t));
+    }
+    function selfMoveOk(uid) {
+      return request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'lastTxId'])
+        && request.resource.data.balance is number
+        && request.resource.data.balance >= 0
+        && request.resource.data.balance <= 50000000
+        && !exists(txPath(request.resource.data.lastTxId))
+        && selfTxOk(request.resource.data.lastTxId, uid);
+    }
+
+    // someone ELSE sent you money: your balance goes up, and the sender paid for it
+    function incomingTxOk(t, uid) {
+      let p = txAfter(t.pairTxId);
+      return t.userId == uid
+        && t.senderId == request.auth.uid
+        && t.type == 'transfer'
+        && t.direction == 'credit'
+        && money(request.resource.data.balance, resource.data.balance + t.amount)
+        && request.resource.data.balance <= 50000000
+        && getAfter(accountPath(request.auth.uid)).data.lastTxId == t.pairTxId
+        && p.userId == request.auth.uid
+        && p.direction == 'debit'
+        && p.type == 'transfer'
+        && p.recipientId == uid
+        && money(p.amount, t.amount);
+    }
+    function incomingOk(uid) {
+      return request.auth.uid != uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'lastCreditTxId'])
+        && !exists(txPath(request.resource.data.lastCreditTxId))
+        && incomingTxOk(txAfter(request.resource.data.lastCreditTxId), uid);
+    }
+
+    match /accounts/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.keys().hasOnly(['currency', 'balance', 'accountNumber', 'accountStatus', 'createdAt'])
+        && request.resource.data.currency == 'NGN'
+        && request.resource.data.balance == 0
+        && request.resource.data.accountStatus == 'active'
+        && request.resource.data.accountNumber is string
+        && request.resource.data.accountNumber.matches('[0-9]{10}')
+        && request.resource.data.createdAt == request.time
+        && getAfter(lockPath(request.resource.data.accountNumber)).data.uid == request.auth.uid;
+      allow update: if signedIn() && (selfMoveOk(userId) || incomingOk(userId));
+      allow delete: if false;
+    }
+
+    // ---------- transactions (history) ----------
+    function txFieldsOk() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['userId', 'direction', 'type', 'amount', 'description', 'status', 'simulated',
+                               'createdAt', 'senderId', 'recipientId', 'counterpartyName', 'pairTxId', 'savingId'])
+        && d.keys().hasAll(['userId', 'direction', 'type', 'amount', 'description', 'status', 'simulated', 'createdAt'])
+        && d.simulated == true
+        && d.createdAt == request.time
+        && d.amount is number
+        && d.amount > 0
+        && d.description is string
+        && d.description.size() <= 250
+        && d.direction in ['credit', 'debit']
+        && ((d.type == 'deposit' && d.direction == 'credit' && d.amount >= 100 && d.amount <= 1000000 && d.status == 'successful')
+         || (d.type == 'transfer' && d.amount >= 100 && d.amount <= 500000 && d.status == 'successful')
+         || (d.type == 'withdrawal' && d.direction == 'debit' && d.amount >= 500 && d.amount <= 500000 && d.status == 'pending')
+         || (d.type == 'airtime' && d.direction == 'debit' && d.amount >= 50 && d.amount <= 50000 && d.status == 'successful')
+         || (d.type == 'data' && d.direction == 'debit' && d.amount in [500, 1000, 1500, 2500, 4000] && d.status == 'successful')
+         || (d.type == 'savings' && d.amount >= 100 && d.amount <= 10000000 && d.status == 'successful'));
+    }
+
+    match /transactions/{transactionId} {
+      allow get: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && txFieldsOk() && (
+          // your own record: must come with your balance change
+          (request.resource.data.userId == request.auth.uid
+            && getAfter(accountPath(request.auth.uid)).data.lastTxId == transactionId)
+          // the record for the person you are paying
+          || (request.resource.data.userId != request.auth.uid
+            && request.resource.data.senderId == request.auth.uid
+            && request.resource.data.type == 'transfer'
+            && request.resource.data.direction == 'credit'
+            && getAfter(accountPath(request.resource.data.userId)).data.lastCreditTxId == transactionId));
+      allow update, delete: if false;
+    }
+
+    // ---------- savings goals ----------
+    match /savings/{savingId} {
+      allow get: if signedIn() && (resource == null || resource.data.userId == request.auth.uid);
+      allow list: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['userId', 'goalName', 'targetAmount', 'savedAmount', 'simulated', 'createdAt'])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.goalName is string
+        && request.resource.data.goalName.size() >= 2
+        && request.resource.data.goalName.size() <= 40
+        && request.resource.data.targetAmount is number
+        && request.resource.data.targetAmount >= 1000
+        && request.resource.data.targetAmount <= 100000000
+        && request.resource.data.savedAmount == 0
+        && request.resource.data.simulated == true
+        && request.resource.data.createdAt == request.time;
+      // the saved amount can only change together with a matching savings transaction
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['savedAmount'])
+        && request.resource.data.savedAmount >= 0
+        && txAfter(getAfter(accountPath(request.auth.uid)).data.lastTxId).savingId == savingId;
+      allow delete: if false;
+    }
+
+    // ---------- notifications ----------
+    function notifLinked(id) {
+      return txAfter(id).userId == request.resource.data.userId
+        && (request.resource.data.userId == request.auth.uid
+            || txAfter(id).senderId == request.auth.uid);
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['userId', 'title', 'message', 'read', 'createdAt'])
+        && request.resource.data.read == false
+        && request.resource.data.title is string
+        && request.resource.data.title.size() <= 100
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 300
+        && request.resource.data.createdAt == request.time
+        && ((notificationId == 'welcome_' + request.auth.uid && request.resource.data.userId == request.auth.uid)
+            || notifLinked(notificationId));
+      // you may only mark your own notification as read
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+      allow delete: if false;
+    }
+  }
+}
